@@ -26,7 +26,7 @@ const login = (request, response) => {
 		return res.status(400).json({ error: 'RAWR! All fields required' });
 	}
 
-	return Account.AccountModel.authenicate(username, password, (err, account) => {
+	return Account.AccountModel.authenticate(username, password, (err, account) => {
 		if(err || !account) {
 			return res.status(401).json({ error: 'Wrong username or password.' });
 		}

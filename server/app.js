@@ -7,6 +7,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const expressHandlebars = require('express-handlebars');
 const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
+const url = require('url');
+const redis = require('redis');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
@@ -17,6 +20,22 @@ mongoose.connect(dbURL, (err) => {
     console.log('Could not connect to database');
     throw err;
   }
+});
+
+let redisURL = {
+  hostname: 'redis-13404.c285.us-west-2-2.ec2.cloud.redislabs.com',
+  port: '13404',
+};
+
+let redisPASS = 'EtOkpkOSM2uVNlYJGylWZHmnpNbqWTZG';
+if (process.env.REDISCLOUD_URL) {
+  redisURL = url.parse(process.env.REDISCLOUD_URL);
+  [, redisPASS] = redisURL.auth.split(':');
+}
+const redisClient = redis.createClient({
+  host: redisURL.hostname,
+  port: redisURL.port,
+  password: redisPASS,
 });
 
 // Pull in our routes
@@ -31,9 +50,15 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(session({
   key: 'sessionid',
+  // store: new RedisStore({
+  //   client: redisClient,
+  // }),
   secret: 'Domo Arigato',
   resave: true,
   saveUninitialized: true,
+  // cookie: {
+  //   httpOnly: true,
+  // },
 }));
 app.engine('handlebars', expressHandlebars({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
